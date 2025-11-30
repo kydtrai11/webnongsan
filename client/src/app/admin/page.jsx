@@ -40,6 +40,10 @@ const page = () => {
                     <Link href="/admin/products" className="flex items-center py-3 px-4 rounded-lg hover:bg-gray-800 transition-colors">
                         <span className="mr-3">📦</span> Quản lý Sản phẩm
                     </Link>
+                    <Link href="/admin/orders" className="flex items-center py-3 px-4 rounded-lg hover:bg-gray-800 transition-colors">
+                        <span className="mr-3">🗂️</span> Quản lý đơn hàng
+
+                    </Link>
                 </nav>
                 {/* <button onClick={handleLogout} className="mt-12 w-full bg-red-600 hover:bg-red-700 py-3 rounded-lg font-medium transition-colors">
                     Đăng xuất

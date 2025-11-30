@@ -83,21 +83,25 @@ const getProductById = async (req, res) => {
 // Tạo sản phẩm mới (POST /products)
 const createProduct = async (req, res) => {
     try {
-        const { name, description, basePrice, imageUrl, tags, isSeasonal, categoryId } = req.body;
+        console.log(req.body);
+        const { name, description, basePrice, sold, discountPrice, imageUrl, imageUrls, isSeasonal, categoryId } = req.body;
         const product = await Product.create({
             name,
             description,
             basePrice,
+            discountPrice,
+            sold,
             imageUrl,
-            tags,
+            imageUrls,
             isSeasonal,
-            CategoryId: categoryId // FK cho Category
+            categoryId: categoryId // FK cho Category
         });
         res.status(201).json({
             success: true,
             data: product
         });
     } catch (error) {
+        console.log(error);
         res.status(400).json({
             success: false,
             message: 'Lỗi khi tạo sản phẩm',
@@ -110,28 +114,39 @@ const createProduct = async (req, res) => {
 const updateProduct = async (req, res) => {
     try {
         const { id } = req.params;
-        const { name, description, basePrice, imageUrl, tags, isSeasonal, categoryId } = req.body;
-        const product = await Product.findByPk(id);
-        if (!product) {
-            return res.status(404).json({
-                success: false,
-                message: 'Không tìm thấy sản phẩm'
-            });
-        }
-        await product.update({
+        const { name, description, basePrice, sold, discountPrice, imageUrl, imageUrls, isSeasonal, categoryId } = req.body;
+        // const product = await Product.findByPk(id);
+        // if (!product) {
+        //     return res.status(404).json({
+        //         success: false,
+        //         message: 'Không tìm thấy sản phẩm'
+        //     });
+        // }
+        console.log(categoryId);
+
+        const product = await Product.update({
             name,
             description,
             basePrice,
+            discountPrice,
+            sold,
             imageUrl,
-            tags,
+            imageUrls,
             isSeasonal,
-            CategoryId: categoryId
-        });
+            categoryId: categoryId
+        },
+            {
+                where: {
+                    id: id // Sử dụng ID sản phẩm để tìm và cập nhật
+                },
+                returning: true // Để nhận dữ liệu sản phẩm đã được cập nhật
+            });
         res.status(200).json({
             success: true,
             data: product
         });
     } catch (error) {
+        console.log(error);
         res.status(400).json({
             success: false,
             message: 'Lỗi khi cập nhật sản phẩm',
@@ -144,14 +159,18 @@ const updateProduct = async (req, res) => {
 const deleteProduct = async (req, res) => {
     try {
         const { id } = req.params;
-        const product = await Product.findByPk(id);
-        if (!product) {
-            return res.status(404).json({
-                success: false,
-                message: 'Không tìm thấy sản phẩm'
-            });
-        }
-        await product.destroy();
+        // const Product = await Product.findByPk(id);
+        // if (!Product) {
+        //     return res.status(404).json({
+        //         success: false,
+        //         message: 'Không tìm thấy sản phẩm'
+        //     });
+        // }
+        await Product.destroy({
+            where: {
+                id: id
+            }
+        });
         res.status(200).json({
             success: true,
             message: 'Xóa sản phẩm thành công'

@@ -1,21 +1,29 @@
-"use client"
-import Link from 'next/link'
+"use client";
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react';
 
 const Header = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [categories, setCategories] = useState([]);
     const [showDropdown, setShowDropdown] = useState(false);
-    const router = useRouter()
+    const [user, setUser] = useState(null); // State to hold user info
+    const router = useRouter();
+
     const handleSearch = (e) => {
         e.preventDefault();
         if (searchQuery) {
             router.push(`/search?q=${searchQuery}`);
         }
     };
+
     useEffect(() => {
         fetchCategories();
+        // Load user info from localStorage
+        const storedUser = localStorage.getItem('user');
+        if (storedUser) {
+            setUser(JSON.parse(storedUser)); // Parse and set user info
+        }
     }, []);
 
     const fetchCategories = async () => {
@@ -29,10 +37,20 @@ const Header = () => {
             console.error('Error fetching categories:', err);
         }
     };
+
+    const handleLogout = () => {
+        // Clear user from localStorage
+        localStorage.removeItem('user');
+        setUser(null); // Reset user state
+        router.push('/'); // Redirect to homepage or any desired page
+    };
+
     return (
         <header className="bg-green-700 text-white p-4 sticky top-0 z-10">
             <div className="container mx-auto px-4 sm:px-6 md:px-8 flex justify-between items-center">
-                <h1 className="text-3xl font-bold"> <Link href={"/"}> Thế Giới Nông Sản</Link></h1>
+                <h1 className="text-3xl font-bold">
+                    <Link href="/"> Thế Giới Nông Sản</Link>
+                </h1>
 
                 {/* Categories Dropdown */}
                 <div className="relative">
@@ -77,15 +95,26 @@ const Header = () => {
                         </button>
                     </form>
                     <nav className="space-x-4">
-                        <Link href="/login" className="hover:underline">Đăng nhập</Link>
-                        <Link href="/register" className="hover:underline">Đăng ký</Link>
+                        {/* Check if user is logged in */}
+                        {user ? (
+                            <>
+                                <span className="hover:underline">{user.customerName}</span>
+                                <button onClick={handleLogout} className="hover:underline">
+                                    Đăng xuất
+                                </button>
+                            </>
+                        ) : (
+                            <>
+                                <Link href="/login" className="hover:underline">Đăng nhập</Link>
+                                <Link href="/register" className="hover:underline">Đăng ký</Link>
+                            </>
+                        )}
                         <Link href="/cart" className="hover:underline">Giỏ hàng</Link>
-                        <Link href="/admin" className="hover:underline">Quản trị</Link>
                     </nav>
                 </div>
             </div>
         </header>
-    )
-}
+    );
+};
 
-export default Header
+export default Header;

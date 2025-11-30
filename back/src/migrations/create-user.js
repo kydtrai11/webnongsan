@@ -19,7 +19,7 @@ module.exports = {
         allowNull: false,
       },
       role: {
-        type: Sequelize.ENUM('customer', 'supplier', 'admin'),
+        type: Sequelize.STRING,
         defaultValue: 'customer',
       },
       resetToken: {
@@ -27,6 +27,18 @@ module.exports = {
       },
       resetTokenExpiration: {
         type: Sequelize.DATE,
+      },
+      customerName: {
+        type: Sequelize.STRING,
+        allowNull: false, // Bắt buộc nếu cần
+      },
+      phone: {
+        type: Sequelize.STRING,
+        allowNull: false, // Bắt buộc nếu cần
+      },
+      address: {
+        type: Sequelize.STRING,
+        allowNull: false, // Bắt buộc nếu cần
       },
       createdAt: {
         allowNull: false,

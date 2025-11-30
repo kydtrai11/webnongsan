@@ -5,7 +5,7 @@ const {
 module.exports = (sequelize, DataTypes) => {
   class user extends Model {
     static associate(models) {
-      // 
+      user.hasMany(models.Order, { foreignKey: 'userId' });
     }
   }
   user.init({
@@ -19,7 +19,7 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
     },
     role: {
-      type: DataTypes.ENUM('customer', 'supplier', 'admin'),
+      type: DataTypes.STRING,
       defaultValue: 'customer',
     },
     resetToken: {
@@ -27,6 +27,18 @@ module.exports = (sequelize, DataTypes) => {
     },
     resetTokenExpiration: {
       type: DataTypes.DATE,
+    },
+    customerName: {
+      type: DataTypes.STRING,
+      allowNull: false, // Bắt buộc nếu cần
+    },
+    phone: {
+      type: DataTypes.STRING,
+      allowNull: false, // Bắt buộc nếu cần
+    },
+    address: {
+      type: DataTypes.STRING,
+      allowNull: false, // Bắt buộc nếu cần
     },
   }, {
     sequelize,

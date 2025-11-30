@@ -3,12 +3,12 @@ const bcrypt = require('bcrypt');
 const { User } = require('../models');
 
 exports.register = async (req, res) => {
-    const { email, password, role } = req.body;
+    const { email, password, role, customerName, phone, address } = req.body;
     try {
         const existingUser = await User.findOne({ where: { email } });
         if (existingUser) return res.status(400).json({ message: 'Email đã tồn tại' });
         const hashedPassword = await bcrypt.hash(password, 10);
-        await User.create({ email, password: hashedPassword, role });
+        await User.create({ email, password: hashedPassword, role, customerName, phone, address });
         res.status(201).json({ message: 'Đăng ký thành công' });
     } catch (err) {
         console.log(err);
@@ -24,7 +24,7 @@ exports.login = async (req, res) => {
         const validPassword = await bcrypt.compare(password, user.password);
         if (!validPassword) return res.status(400).json({ message: 'Mật khẩu không đúng' });
         const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, 'secret_key', { expiresIn: '1h' });
-        res.json({ token });
+        res.json({ token, user });
     } catch (err) {
         res.status(500).json({ message: 'Đã xảy ra lỗi, vui lòng thử lại' });
     }

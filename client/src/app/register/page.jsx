@@ -1,16 +1,18 @@
-"use client"
+"use client";
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Footer from '@/components/layouts/Footer';
 import Header from '@/components/layouts/Header';
 
-
 export default function Register() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [role, setRole] = useState('customer');
+    const [customerName, setCustomerName] = useState('');
+    const [phone, setPhone] = useState('');
+    const [address, setAddress] = useState('');
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
     const router = useRouter();
@@ -25,7 +27,7 @@ export default function Register() {
             const res = await fetch('/api/auth/register', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password, role }),
+                body: JSON.stringify({ email, password, role, customerName, phone, address }),
             });
             const data = await res.json();
             console.log(data);
@@ -37,7 +39,7 @@ export default function Register() {
                 setError(data.message || 'Đăng ký thất bại');
             }
         } catch (err) {
-            console.log({ email, password, role });
+            console.log({ email, password, role, customerName, phone, address });
 
             setError('Đã xảy ra lỗi, vui lòng thử lại');
         }
@@ -56,6 +58,39 @@ export default function Register() {
                         {error && <p className="text-red-500 mb-4 text-center">{error}</p>}
                         {success && <p className="text-green-500 mb-4 text-center">{success}</p>}
                         <form onSubmit={handleRegister}>
+                            <div className="mb-4">
+                                <label htmlFor="customerName" className="block text-gray-700 font-medium">Tên người nhận</label>
+                                <input
+                                    type="text"
+                                    id="customerName"
+                                    value={customerName}
+                                    onChange={(e) => setCustomerName(e.target.value)}
+                                    className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-600"
+                                    required
+                                />
+                            </div>
+                            <div className="mb-4">
+                                <label htmlFor="phone" className="block text-gray-700 font-medium">Số điện thoại</label>
+                                <input
+                                    type="tel"
+                                    id="phone"
+                                    value={phone}
+                                    onChange={(e) => setPhone(e.target.value)}
+                                    className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-600"
+                                    required
+                                />
+                            </div>
+                            <div className="mb-4">
+                                <label htmlFor="address" className="block text-gray-700 font-medium">Địa chỉ</label>
+                                <textarea
+                                    id="address"
+                                    value={address}
+                                    onChange={(e) => setAddress(e.target.value)}
+                                    className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-600"
+                                    required
+                                    rows={3}
+                                />
+                            </div>
                             <div className="mb-4">
                                 <label htmlFor="email" className="block text-gray-700 font-medium">Email</label>
                                 <input

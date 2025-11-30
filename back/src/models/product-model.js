@@ -42,8 +42,8 @@ module.exports = (sequelize, DataTypes) => {
     imageUrl: {
       type: DataTypes.STRING
     },
-    tags: {
-      type: DataTypes.STRING, // Thay từ ARRAY thành JSON để tương thích MariaDB
+    imageUrls: {
+      type: DataTypes.STRING
     },
     isSeasonal: {
       type: DataTypes.BOOLEAN,

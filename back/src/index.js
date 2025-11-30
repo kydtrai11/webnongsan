@@ -7,6 +7,8 @@ const authRoutes = require('./routes/authRoutes');
 dotenv.config()
 const productRoutes = require('./routes/productRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');
+const uploadrRoutes = require('./routes/uploadRoutes');
+const orderRoutes = require('./routes/orderRoutes');
 // const connectDB = require("./config/connectSql.js")
 
 const app = express()
@@ -24,6 +26,8 @@ connectDB()
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/categories', categoryRoutes);
+app.use('/api/orders', orderRoutes);
+app.use('/api/upload', uploadrRoutes);
 
 
 

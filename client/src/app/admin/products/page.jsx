@@ -1,30 +1,45 @@
-"use client"
+'use client';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 
 export default function AdminProducts() {
     const router = useRouter();
     const [products, setProducts] = useState([]);
+    const [categories, setCategories] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [showForm, setShowForm] = useState(false);
     const [editingProduct, setEditingProduct] = useState(null);
-    const [formData, setFormData] = useState({ name: '', originalPrice: '', currentPrice: '', sold: 0, image: '' });
+    const [formData, setFormData] = useState({
+        name: '',
+        description: '',
+        basePrice: '',
+        discountPrice: '',
+        sold: 0,
+        imageUrl: '',
+        imageUrls: '',
+        isSeasonal: false,
+        categoryId: '',
+    });
 
-    // Kiểm tra token và role
     useEffect(() => {
-        // const token = localStorage.getItem('token');
-        // if (!token) {
-        //   router.push('/login');
-        //   return;
-        // }
-        // const payload = JSON.parse(atob(token.split('.')[1]));
-        // if (payload.role !== 'admin') {
-        //   router.push('/');
-        //   return;
-        // }
+        fetchCategories();
         fetchProducts();
     }, [router]);
+
+    const fetchCategories = async () => {
+        try {
+            const res = await fetch('/api/categories');
+            if (res.ok) {
+                const data = await res.json();
+                setCategories(data.data);
+            } else {
+                setError('Không thể lấy danh sách danh mục');
+            }
+        } catch (err) {
+            setError('Đã xảy ra lỗi');
+        }
+    };
 
     const fetchProducts = async () => {
         try {
@@ -32,8 +47,6 @@ export default function AdminProducts() {
             if (res.ok) {
                 const data = await res.json();
                 setProducts(data.data);
-                console.log(data.data);
-
             } else {
                 setError('Không thể lấy danh sách sản phẩm');
             }
@@ -47,6 +60,7 @@ export default function AdminProducts() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
+            console.log(formData);
             let url = '/api/products';
             let method = 'POST';
             if (editingProduct) {
@@ -61,19 +75,41 @@ export default function AdminProducts() {
             if (res.ok) {
                 setShowForm(false);
                 setEditingProduct(null);
-                setFormData({ name: '', originalPrice: '', currentPrice: '', sold: 0, image: '' });
+                setFormData({
+                    name: '',
+                    description: '',
+                    basePrice: '',
+                    discountPrice: '',
+                    sold: 0,
+                    imageUrl: '',
+                    imageUrls: '',
+                    isSeasonal: false,
+                    categoryId: '',
+                });
                 fetchProducts();
             } else {
+                console.log(res);
                 setError('Không thể lưu thay đổi');
             }
         } catch (err) {
+            console.log(err);
             setError('Đã xảy ra lỗi');
         }
     };
 
     const handleEdit = (product) => {
         setEditingProduct(product);
-        setFormData({ name: product.name, originalPrice: product.originalPrice, currentPrice: product.currentPrice, sold: product.sold, image: product.image });
+        setFormData({
+            name: product.name,
+            description: product.description,
+            basePrice: product.basePrice,
+            discountPrice: product.discountPrice,
+            sold: product.sold,
+            imageUrl: product.imageUrl,
+            imageUrls: product.imageUrls,
+            isSeasonal: product.isSeasonal,
+            categoryId: product.categoryId || '',
+        });
         setShowForm(true);
     };
 
@@ -90,6 +126,44 @@ export default function AdminProducts() {
                 setError('Đã xảy ra lỗi');
             }
         }
+    };
+
+    const handleImageChange = async (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const formDataImage = new FormData();
+            formDataImage.append('file', file);
+            const res = await fetch("http://localhost:5000/api/upload/upload", {
+                method: "POST",
+                body: formDataImage,
+            });
+
+            const data = await res.json();
+            if (data.url) {
+                setFormData({ ...formData, imageUrl: data.url });
+            }
+        }
+    };
+
+    const handleImageUrlsChange = async (e) => {
+        const files = Array.from(e.target.files);
+        const imageUrls = await Promise.all(files.map(async (file) => {
+            const formDataImage = new FormData();
+            formDataImage.append('file', file);
+            const res = await fetch("http://localhost:5000/api/upload/upload", {
+                method: "POST",
+                body: formDataImage,
+            });
+
+            const data = await res.json();
+            return data.url;
+        }));
+        setFormData({ ...formData, imageUrls: imageUrls.join(', ') });
+    };
+
+    const getCategoryName = (id) => {
+        const category = categories.find(cat => cat.id === id);
+        return category ? category.name : 'Không xác định';
     };
 
     if (loading) return <div className="flex items-center justify-center min-h-screen">Đang tải...</div>;
@@ -113,7 +187,11 @@ export default function AdminProducts() {
                                 <th className="p-4 text-left">Giá gốc</th>
                                 <th className="p-4 text-left">Giá hiện tại</th>
                                 <th className="p-4 text-left">Đã bán</th>
-                                <th className="p-4 text-left">Hình ảnh</th>
+                                <th className="p-4 text-left">Hình ảnh chính</th>
+                                {/* <th className="p-4 text-left">Hình ảnh phụ</th> */}
+                                <th className="p-4 text-left">Mô tả</th>
+                                <th className="p-4 text-left">Mùa vụ</th>
+                                <th className="p-4 text-left">Danh mục</th>  {/* Header for category name */}
                                 <th className="p-4 text-left">Actions</th>
                             </tr>
                         </thead>
@@ -123,11 +201,17 @@ export default function AdminProducts() {
                                     <td className="p-4 font-medium text-gray-900">{product.id}</td>
                                     <td className="p-4 text-gray-700">{product.name}</td>
                                     <td className="p-4 text-gray-700">{product.basePrice} ₫</td>
-                                    <td className="p-4 text-gray-700 font-semibold text-gray-900">{product.currentPrice} ₫</td>
+                                    <td className="p-4 text-gray-700 font-semibold text-gray-900">{product.discountPrice} ₫</td>
                                     <td className="p-4 text-gray-700">{product.sold}</td>
                                     <td className="p-4 text-gray-700">
-                                        <span className="text-sm bg-gray-100 px-2 py-1 rounded">{product.imageUrl}</span>
+                                        <img src={product.imageUrl} alt={product.name} className="w-16 h-16 object-cover" />
                                     </td>
+                                    {/* <td className="p-4 text-gray-700">
+                                        <span className="text-sm bg-gray-100 px-2 py-1 rounded">{product.imageUrls}</span>
+                                    </td> */}
+                                    <td className="p-4 text-gray-700">{product.description}</td>
+                                    <td className="p-4 text-gray-700">{product.isSeasonal ? 'Có' : 'Không'}</td>
+                                    <td className="p-4 text-gray-700">{getCategoryName(product.categoryId)}</td> {/* Display category name */}
                                     <td className="p-4">
                                         <button onClick={() => handleEdit(product)} className="bg-yellow-500 text-white px-3 py-1 rounded-md hover:bg-yellow-600 mr-2 transition-colors">
                                             Sửa
@@ -151,17 +235,27 @@ export default function AdminProducts() {
                                 <input
                                     type="text"
                                     value={formData.name}
-                                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                    onChange={(e) => {
+                                        setFormData({ ...formData, name: e.target.value }), console.log(formData);
+                                    }}
                                     className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                                     required
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-gray-700 font-medium mb-2">Mô tả</label>
+                                <textarea
+                                    value={formData.description}
+                                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                                 />
                             </div>
                             <div>
                                 <label className="block text-gray-700 font-medium mb-2">Giá gốc</label>
                                 <input
                                     type="number"
-                                    value={formData.originalPrice}
-                                    onChange={(e) => setFormData({ ...formData, originalPrice: parseFloat(e.target.value) })}
+                                    value={formData.basePrice}
+                                    onChange={(e) => setFormData({ ...formData, basePrice: parseFloat(e.target.value) })}
                                     className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                                     required
                                 />
@@ -170,8 +264,8 @@ export default function AdminProducts() {
                                 <label className="block text-gray-700 font-medium mb-2">Giá hiện tại</label>
                                 <input
                                     type="number"
-                                    value={formData.currentPrice}
-                                    onChange={(e) => setFormData({ ...formData, currentPrice: parseFloat(e.target.value) })}
+                                    value={formData.discountPrice}
+                                    onChange={(e) => setFormData({ ...formData, discountPrice: parseFloat(e.target.value) })}
                                     className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                                     required
                                 />
@@ -183,23 +277,61 @@ export default function AdminProducts() {
                                     value={formData.sold}
                                     onChange={(e) => setFormData({ ...formData, sold: parseInt(e.target.value) })}
                                     className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
-                                    required
                                 />
                             </div>
-                            <div className="md:col-span-2">
-                                <label className="block text-gray-700 font-medium mb-2">URL Hình ảnh</label>
+                            <div>
+                                <label className="block text-gray-700 font-medium mb-2">Hình ảnh chính</label>
                                 <input
-                                    type="text"
-                                    value={formData.image}
-                                    onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={handleImageChange}
                                     className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                                 />
+                            </div>
+                            <div>
+                                <label className="block text-gray-700 font-medium mb-2">Hình ảnh phụ</label>
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    multiple
+                                    onChange={handleImageUrlsChange}
+                                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-gray-700 font-medium mb-2">Mùa vụ</label>
+                                <select
+                                    value={formData.isSeasonal}
+                                    onChange={(e) => setFormData({ ...formData, isSeasonal: e.target.value === 'true' })}
+                                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                                >
+                                    <option value={false}>Không</option>
+                                    <option value={true}>Có</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label className="block text-gray-700 font-medium mb-2">Danh mục</label>
+                                <select
+                                    value={formData.categoryId}
+                                    onChange={(e) => {
+                                        setFormData({ ...formData, categoryId: e.target.value }); console.log(formData);
+                                    }}
+                                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                                    required
+                                >
+                                    <option value="">Chọn danh mục...</option>
+                                    {categories.map((category) => (
+                                        <option key={category.id} value={category.id}>
+                                            {category.name}
+                                        </option>
+                                    ))}
+                                </select>
                             </div>
                             <div className="md:col-span-2 flex space-x-4">
                                 <button type="submit" className="flex-1 bg-gray-900 text-white py-3 rounded-lg hover:bg-gray-800 font-medium transition-colors">
                                     Lưu
                                 </button>
-                                <button type="button" onClick={() => { setShowForm(false); setEditingProduct(null); setFormData({ name: '', originalPrice: '', currentPrice: '', sold: 0, image: '' }); }} className="flex-1 bg-gray-300 text-gray-900 py-3 rounded-lg hover:bg-gray-400 font-medium transition-colors">
+                                <button type="button" onClick={() => { setShowForm(false); setEditingProduct(null); setFormData({ name: '', description: '', basePrice: '', discountPrice: '', sold: 0, imageUrl: '', imageUrls: '', isSeasonal: false, categoryId: '' }); }} className="flex-1 bg-gray-300 text-gray-900 py-3 rounded-lg hover:bg-gray-400 font-medium transition-colors">
                                     Hủy
                                 </button>
                             </div>

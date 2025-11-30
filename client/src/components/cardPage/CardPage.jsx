@@ -31,7 +31,7 @@ const CardPage = () => {
         localStorage.setItem('cart', JSON.stringify(updatedItems));
     };
 
-    const totalPrice = cartItems.reduce((total, item) => total + (item.currentPrice * item.quantity), 0);
+    const totalPrice = cartItems.reduce((total, item) => total + (item.discountPrice * item.quantity), 0);
 
     const handleCheckout = () => {
         if (cartItems.length === 0) {
@@ -105,7 +105,7 @@ const CardPage = () => {
                                                 </div>
                                             </td>
                                             <td className="p-4 text-gray-900 font-semibold">
-                                                {(item.currentPrice * item.quantity)} ₫
+                                                {(item.discountPrice * item.quantity)} ₫
                                             </td>
                                             <td className="p-4">
                                                 <button
